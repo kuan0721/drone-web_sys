@@ -1,0 +1,44 @@
+[
+  {
+    "start_time": "2025-06-08 10:40:12",
+    "end_time": "2025-06-08 10:50:59",
+    "duration_minutes": 10.7829,
+    "charging_curve": [
+      {
+        "time": "00:00",
+        "percentage": 20
+      },
+      {
+        "time": "00:00",
+        "percentage": 30
+      },
+      {
+        "time": "00:03",
+        "percentage": 40
+      },
+      {
+        "time": "00:27",
+        "percentage": 50
+      },
+      {
+        "time": "01:40",
+        "percentage": 60
+      },
+      {
+        "time": "02:39",
+        "percentage": 70
+      },
+      {
+        "time": "04:04",
+        "percentage": 80
+      },
+      {
+        "time": "06:20",
+        "percentage": 90
+      }
+    ],
+    "start_voltage": 15.36,
+    "end_voltage": 16.72
+  }
+  
+]

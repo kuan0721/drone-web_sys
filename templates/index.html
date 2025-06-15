@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>無人機即時監控系統</title>
+    
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- 頂部導航 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
+        <div class="container-fluid">
+            <div class="navbar-brand d-flex align-items-center">
+                <i class="bi bi-robot me-2 fs-3"></i>
+                <span class="fw-bold">無人機即時監控系統</span>
+            </div>
+            <div class="navbar-nav ms-auto">
+                <div class="nav-item">
+                    <span class="nav-link" id="current-time"></span>
+                </div>
+                <div class="nav-item">
+                    <span class="badge bg-success pulse" id="connection-status">
+                        <i class="bi bi-wifi me-1"></i>已連線
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid p-4">
+        <!-- 第一排 - 主要指標 -->
+        <div class="row g-4 mb-4">
+            <!-- 速度儀表 -->
+            <div class="col-xl-4">
+                <div class="card dashboard-card h-100 shadow-lg">
+                    <div class="card-header bg-gradient-primary">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-speedometer2 me-2"></i>
+                            <h5 class="mb-0 text-white">飛行速度</h5>
+                        </div>
+                    </div>
+                    <div class="card-body text-center">
+                        <!-- 速度儀表板 START -->
+                        <div class="speedometer-container">
+                            <svg viewBox="0 0 200 100" class="speedometer-svg">
+                                <!-- 背景灰色半圓 -->
+                                <path class="speedometer-arc" 
+                                      d="M20 100 A80 80 0 0 1 180 100" 
+                                      fill="none" stroke="#e0e0e0" stroke-width="10"/>
+                                <!-- 綠色進度半圓 -->
+                                <path id="speed-progress" class="speedometer-arc" 
+                                      d="M20 100 A80 80 0 0 1 20 100" 
+                                      fill="none" stroke="#28a745" stroke-width="10" 
+                                      stroke-linecap="round"/>
+                                <!-- 中心圓點 -->
+                                <circle cx="100" cy="100" r="4" fill="#495057"/>
+                                <!-- 指針 -->
+                                <line id="speed-needle" 
+                                      x1="100" y1="100" x2="20" y2="100" 
+                                      stroke="#dc2626" stroke-width="4" stroke-linecap="round"/>
+                            </svg>
+                            <div class="speedometer-display" 
+                                 style="position:absolute; top:65%; left:50%; transform:translate(-50%,-50%); text-align:center;">
+                                <div id="percentage" class="speed-value">0</div>
+                                <div id="current-speed" class="speed-unit">0%</div>
+                            </div>
+                        </div>
+                        <div class="row mt-3 text-center">
+                            <div class="col-4">
+                                <small class="text-muted d-block">最小</small>
+                                <strong class="text-primary">0</strong>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted d-block">當前</small>
+                                <strong class="text-primary" id="current-speed">0</strong>
+                            </div>
+                            <div class="col-4">
+                                <small class="text-muted d-block">最大</small>
+                                <strong class="text-primary">20</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 高度指示器 -->
+            <div class="col-xl-4">
+                <div class="card dashboard-card h-100 shadow-lg">
+                    <div class="card-header bg-gradient-success">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-arrow-up-circle me-2"></i>
+                            <h5 class="mb-0 text-white">飛行高度</h5>
+                        </div>
+                    </div>
+                    <div class="card-body d-flex flex-column align-items-center justify-content-center">
+                        <div class="altitude-container">
+                            <div class="altitude-scale">
+                                <div class="scale-line" data-value="90"><span>90m</span></div>
+                                <div class="scale-line" data-value="60"><span>60m</span></div>
+                                <div class="scale-line" data-value="30"><span>30m</span></div>
+                                <div class="scale-line" data-value="0"><span>0m</span></div>
+                            </div>
+                            <div class="altitude-bar-container">
+                                <div id="altitude-bar" class="altitude-bar"></div>
+                                <div class="altitude-indicator" id="altitude-indicator"></div>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <div class="altitude-value" id="altitude-value">0</div>
+                            <small class="text-muted">公尺</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 電池狀態 -->
+            <div class="col-xl-4">
+                <div class="card dashboard-card h-100 shadow-lg">
+                    <div class="card-header bg-gradient-warning">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-battery-charging me-2"></i>
+                            <h5 class="mb-0 text-white">電池狀態</h5>
+                        </div>
+                    </div>
+                    <div class="card-body text-center">
+                        <div class="battery-container">
+                            <div class="battery-circle-container position-relative">
+                                <svg class="battery-svg" viewBox="0 0 120 120">
+                                    <!-- 背景圓環 -->
+                                    <circle cx="60" cy="60" r="45" fill="none" stroke="#e9ecef" stroke-width="8"/>
+                                    <!-- 進度圓環 -->
+                                    <circle id="battery-circle" cx="60" cy="60" r="45" fill="none" 
+                                            stroke="#28a745" stroke-width="8" stroke-linecap="round"
+                                            stroke-dasharray="283" stroke-dashoffset="283" 
+                                            transform="rotate(-90 60 60)"/>
+                                </svg>
+                                <div class="battery-percentage" id="battery-percentage">100%</div>
+                                <i class="bi bi-lightning-charge battery-icon"></i>
+                            </div>
+                            <div class="battery-details mt-3">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">電壓</small>
+                                        <strong id="battery-voltage">16.8V</strong>
+                                    </div>
+                                    <div class="col-6">
+                                        <small class="text-muted d-block">電流</small>
+                                        <strong id="battery-current">1.0A</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第二排 - 狀態與地圖 -->
+        <div class="row g-4 mb-4">
+            <!-- 飛行狀態 -->
+            <div class="col-lg-6">
+                <div class="card dashboard-card h-100 shadow-lg">
+                    <div class="card-header bg-gradient-info">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <h5 class="mb-0 text-white">飛行狀態</h5>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">
+                                    <i class="bi bi-gear me-2"></i>系統狀態
+                                </h6>
+                                <div class="status-item">
+                                    <span class="status-label">飛行模式</span>
+                                    <span id="flight-mode" class="badge status-badge">未知</span>
+                                </div>
+                                <div class="status-item">
+                                    <span class="status-label">RTK狀態</span>
+                                    <span id="rtk-status" class="badge status-badge">未知</span>
+                                </div>
+                                <div class="status-item">
+                                    <span class="status-label">解鎖狀態</span>
+                                    <span id="arming-status" class="badge status-badge">未知</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-muted mb-3">
+                                    <i class="bi bi-compass me-2"></i>姿態角度
+                                </h6>
+                                <div class="attitude-display">
+                                    <div class="attitude-item">
+                                        <i class="bi bi-arrow-up-down attitude-icon"></i>
+                                        <span class="attitude-label">Pitch</span>
+                                        <span id="pitch-angle" class="attitude-value">0°</span>
+                                    </div>
+                                    <div class="attitude-item">
+                                        <i class="bi bi-arrow-clockwise attitude-icon"></i>
+                                        <span class="attitude-label">Yaw</span>
+                                        <span id="yaw-angle" class="attitude-value">0°</span>
+                                    </div>
+                                    <div class="attitude-item">
+                                        <i class="bi bi-arrow-left-right attitude-icon"></i>
+                                        <span class="attitude-label">Roll</span>
+                                        <span id="roll-angle" class="attitude-value">0°</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 地圖 -->
+            <div class="col-lg-6">
+                <div class="card dashboard-card h-100 shadow-lg">
+                    <div class="card-header bg-gradient-primary">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-geo-alt me-2"></i>
+                                <h5 class="mb-0 text-white">無人機位置</h5>
+                            </div>
+                            <div class="map-controls">
+                                <button class="btn btn-sm btn-outline-light" id="center-map">
+                                    <i class="bi bi-crosshair"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div id="map" class="map-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 第三排 - 充電圖表 -->
+        <div class="row g-4">
+            <div class="col-12">
+                <div class="card dashboard-card shadow-lg">
+                    <div class="card-header bg-gradient-dark">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <i class="bi bi-graph-up me-2"></i>
+                                <h5 class="mb-0 text-white">充電歷程監控</h5>
+                            </div>
+                            <div class="charging-controls">
+                                <button id="start-charging-btn" class="btn btn-success btn-sm">
+                                    <i class="bi bi-play-fill me-1"></i>開始充電記錄
+                                </button>
+                                <button id="stop-charging-btn" class="btn btn-danger btn-sm" disabled>
+                                    <i class="bi bi-stop-fill me-1"></i>停止記錄
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="charging-status mb-3">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="charging-stat">
+                                        <small class="text-muted">充電狀態</small>
+                                        <div id="charging-status" class="fw-bold">待機中</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="charging-stat">
+                                        <small class="text-muted">充電時間</small>
+                                        <div id="charging-time" class="fw-bold">00:00</div>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="charging-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 歷史充電紀錄 -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-gradient-secondary">
+                        <i class="bi bi-clock-history me-2"></i>
+                        <span class="fw-bold text-white">歷史充電紀錄</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="charging-history-list" class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>開始時間</th>
+                                        <th>結束時間</th>
+                                        <th>充電時長</th>
+                                        <th>起始電壓</th>
+                                        <th>結束電壓</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="charging-history-body">
+                                    <!-- 動態產生 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+</body>
+</html>
