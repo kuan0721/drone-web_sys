@@ -5,7 +5,7 @@ import json
 import threading
 from datetime import datetime
 from pymavlink import mavutil
-from control_sys.voltage_reader import VoltageReader
+from voltage_reader import VoltageReader
 
 class LowBatteryResumeException(Exception):
     pass
@@ -294,7 +294,7 @@ class DroneController:
 if __name__ == "__main__":
     # 請根據實際參數調整
     drone = DroneController(
-        connection_string='/dev/ttyACM1',
+        connection_string='udp:127.0.0.1:14550',# ← 模擬器通常 /dev/ttyACM0 或 udp:127.0.0.1:14550
         voltage_port='/dev/ttyUSB0',
         voltage_threshold=15.2,
         voltage_baud=9600,

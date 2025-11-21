@@ -205,17 +205,34 @@ def clear_charge_status():
     last_status = ""
     return jsonify({"ok": True})
 
-# ─── 如果有 DroneController 需求，可繼續保留原有程式 ───
-try:
-    from control_sys.drone_control import DroneController
-    drone_controller = DroneController(
-        connection_string='/dev/ttyACM1',
-        voltage_port='/dev/ttyUSB0'
-    )
-    drone_controller.connect()
-except Exception as e:
-    print("⚠️ 無法初始化 DroneController：", e)
-    drone_controller = None
+# DroneController is not used in this deployment. Keep the variable for API compatibility.
+drone_controller = None
+
+@app.route("/get_telemetry")
+def get_telemetry():
+    """統一的遙測數據端點，組合所有飛行狀態資訊"""
+    data = load_data()
+    batt = data.get("battery", {})
+    gps = data.get("gps_position", {})
+    att = data.get("attitude", {})
+    
+    volt = batt.get("volt", 0.0)
+    min_v, max_v = 14.8, 16.8
+    battery_percent = 0.0
+    if volt:
+        battery_percent = max(0, min(100, (volt - min_v) / (max_v - min_v) * 100))
+        battery_percent = round(battery_percent, 1)
+    
+    return jsonify({
+        "battery": battery_percent,
+        "altitude": data.get("altitude", 0.0),
+        "speed": data.get("speed", 0.0),
+        "lat": gps.get("lat", 0.0),
+        "lon": gps.get("lon", 0.0),
+        "pitch": att.get("pitch", 0.0),
+        "roll": att.get("roll", 0.0),
+        "yaw": att.get("yaw", 0.0)
+    })
 
 @app.route("/start_charging_monitor", methods=["POST"])
 def start_charging_monitor():

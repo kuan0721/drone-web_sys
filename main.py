@@ -3,7 +3,7 @@ import signal
 import time
 
 def main():
-    drone = DroneController('/dev/ttyACM1', voltage_port='/dev/ttyUSB0', voltage_threshold=15.2)
+    drone = DroneController('udp:127.0.0.1:14550', voltage_port='/dev/ttyUSB0', voltage_threshold=15.2)# ← 模擬器通常 /dev/ttyACM0 或 udp:127.0.0.1:14550
     drone.connect()
     
     # 設定信號處理器

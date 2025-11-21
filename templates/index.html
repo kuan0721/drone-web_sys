@@ -3,333 +3,243 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>無人機即時監控系統</title>
+    <title>AERO-SENSE // 無人機監控系統</title>
     
-    <!-- Bootstrap 5.3 -->
+    <!-- Bootstrap 5 (Utility only) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
+    <!-- Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <!-- 頂部導航 -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
-        <div class="container-fluid">
-            <div class="navbar-brand d-flex align-items-center">
-                <i class="bi bi-robot me-2 fs-3"></i>
-                <span class="fw-bold">無人機即時監控系統</span>
-            </div>
-            <div class="navbar-nav ms-auto">
-                <div class="nav-item">
-                    <span class="nav-link" id="current-time"></span>
-                </div>
-                <div class="nav-item">
-                    <span class="badge bg-success pulse" id="connection-status">
-                        <i class="bi bi-wifi me-1"></i>已連線
-                    </span>
-                </div>
-            </div>
+
+    <!-- 背景 3D 場景 -->
+    <div id="canvas-container"></div>
+
+    <!-- 頂部導航欄 -->
+    <header class="hud-header">
+        <div class="header-bracket left"></div>
+        <div class="logo-area">
+            <i class="bi bi-cpu-fill"></i>
+            <span>AERO-SENSE <small>v3.0</small></span>
         </div>
-    </nav>
-
-    <div class="container-fluid p-4">
-        <!-- 第一排 - 主要指標 -->
-        <div class="row g-4 mb-4">
-            <!-- 速度儀表 -->
-            <div class="col-xl-4">
-                <div class="card dashboard-card h-100 shadow-lg">
-                    <div class="card-header bg-gradient-primary">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-speedometer2 me-2"></i>
-                            <h5 class="mb-0 text-white">飛行速度</h5>
-                        </div>
-                    </div>
-                    <div class="card-body text-center">
-                        <!-- 速度儀表板 START -->
-                        <div class="speedometer-container">
-                            <svg viewBox="0 0 200 100" class="speedometer-svg">
-                                <!-- 背景灰色半圓 -->
-                                <path class="speedometer-arc" 
-                                      d="M20 100 A80 80 0 0 1 180 100" 
-                                      fill="none" stroke="#e0e0e0" stroke-width="10"/>
-                                <!-- 綠色進度半圓 -->
-                                <path id="speed-progress" class="speedometer-arc" 
-                                      d="M20 100 A80 80 0 0 1 20 100" 
-                                      fill="none" stroke="#28a745" stroke-width="10" 
-                                      stroke-linecap="round"/>
-                                <!-- 中心圓點 -->
-                                <circle cx="100" cy="100" r="4" fill="#495057"/>
-                                <!-- 指針 -->
-                                <line id="speed-needle" 
-                                      x1="100" y1="100" x2="20" y2="100" 
-                                      stroke="#dc2626" stroke-width="4" stroke-linecap="round"/>
-                            </svg>
-                            <div class="speedometer-display" 
-                                 style="position:absolute; top:65%; left:50%; transform:translate(-50%,-50%); text-align:center;">
-                                <div id="percentage" class="speed-value">0</div>
-                                <div id="current-speed" class="speed-unit">0%</div>
-                            </div>
-                        </div>
-                        <div class="row mt-3 text-center">
-                            <div class="col-4">
-                                <small class="text-muted d-block">最小</small>
-                                <strong class="text-primary">0</strong>
-                            </div>
-                            <div class="col-4">
-                                <small class="text-muted d-block">當前</small>
-                                <strong class="text-primary" id="current-speed">0</strong>
-                            </div>
-                            <div class="col-4">
-                                <small class="text-muted d-block">最大</small>
-                                <strong class="text-primary">20</strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="system-status">
+            <div class="status-pill" id="connection-pill">
+                <span class="indicator"></span> ONLINE
             </div>
-
-            <!-- 高度指示器 -->
-            <div class="col-xl-4">
-                <div class="card dashboard-card h-100 shadow-lg">
-                    <div class="card-header bg-gradient-success">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-arrow-up-circle me-2"></i>
-                            <h5 class="mb-0 text-white">飛行高度</h5>
-                        </div>
-                    </div>
-                    <div class="card-body d-flex flex-column align-items-center justify-content-center">
-                        <div class="altitude-container">
-                            <div class="altitude-scale">
-                                <div class="scale-line" data-value="90"><span>90m</span></div>
-                                <div class="scale-line" data-value="60"><span>60m</span></div>
-                                <div class="scale-line" data-value="30"><span>30m</span></div>
-                                <div class="scale-line" data-value="0"><span>0m</span></div>
-                            </div>
-                            <div class="altitude-bar-container">
-                                <div id="altitude-bar" class="altitude-bar"></div>
-                                <div class="altitude-indicator" id="altitude-indicator"></div>
-                            </div>
-                        </div>
-                        <div class="mt-3 text-center">
-                            <div class="altitude-value" id="altitude-value">0</div>
-                            <small class="text-muted">公尺</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 電池狀態 -->
-            <div class="col-xl-4">
-                <div class="card dashboard-card h-100 shadow-lg">
-                    <div class="card-header bg-gradient-warning">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-battery-charging me-2"></i>
-                            <h5 class="mb-0 text-white">電池狀態</h5>
-                        </div>
-                    </div>
-                    <div class="card-body text-center">
-                        <div class="battery-container">
-                            <div class="battery-circle-container position-relative">
-                                <svg class="battery-svg" viewBox="0 0 120 120">
-                                    <!-- 背景圓環 -->
-                                    <circle cx="60" cy="60" r="45" fill="none" stroke="#e9ecef" stroke-width="8"/>
-                                    <!-- 進度圓環 -->
-                                    <circle id="battery-circle" cx="60" cy="60" r="45" fill="none" 
-                                            stroke="#28a745" stroke-width="8" stroke-linecap="round"
-                                            stroke-dasharray="283" stroke-dashoffset="283" 
-                                            transform="rotate(-90 60 60)"/>
-                                </svg>
-                                <div class="battery-percentage" id="battery-percentage">100%</div>
-                                <i class="bi bi-lightning-charge battery-icon"></i>
-                            </div>
-                            <div class="battery-details mt-3">
-                                <div class="row">
-                                    <div class="col-6">
-                                        <small class="text-muted d-block">電壓</small>
-                                        <strong id="battery-voltage">16.8V</strong>
-                                    </div>
-                                    <div class="col-6">
-                                        <small class="text-muted d-block">電流</small>
-                                        <strong id="battery-current">1.0A</strong>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div class="time-display" id="current-time">--:--:--</div>
         </div>
+        <div class="header-bracket right"></div>
+    </header>
 
-        <!-- 第二排 - 狀態與地圖 -->
-        <div class="row g-4 mb-4">
-            <!-- 飛行狀態 -->
-            <div class="col-lg-6">
-                <div class="card dashboard-card h-100 shadow-lg">
-                    <div class="card-header bg-gradient-info">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-info-circle me-2"></i>
-                            <h5 class="mb-0 text-white">飛行狀態</h5>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h6 class="text-muted mb-3">
-                                    <i class="bi bi-gear me-2"></i>系統狀態
-                                </h6>
-                                <div class="status-item">
-                                    <span class="status-label">飛行模式</span>
-                                    <span id="flight-mode" class="badge status-badge">未知</span>
-                                </div>
-                                <div class="status-item">
-                                    <span class="status-label">RTK狀態</span>
-                                    <span id="rtk-status" class="badge status-badge">未知</span>
-                                </div>
-                                <div class="status-item">
-                                    <span class="status-label">解鎖狀態</span>
-                                    <span id="arming-status" class="badge status-badge">未知</span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <h6 class="text-muted mb-3">
-                                    <i class="bi bi-compass me-2"></i>姿態角度
-                                </h6>
-                                <div class="attitude-display">
-                                    <div class="attitude-item">
-                                        <i class="bi bi-arrow-up-down attitude-icon"></i>
-                                        <span class="attitude-label">Pitch</span>
-                                        <span id="pitch-angle" class="attitude-value">0°</span>
-                                    </div>
-                                    <div class="attitude-item">
-                                        <i class="bi bi-arrow-clockwise attitude-icon"></i>
-                                        <span class="attitude-label">Yaw</span>
-                                        <span id="yaw-angle" class="attitude-value">0°</span>
-                                    </div>
-                                    <div class="attitude-item">
-                                        <i class="bi bi-arrow-left-right attitude-icon"></i>
-                                        <span class="attitude-label">Roll</span>
-                                        <span id="roll-angle" class="attitude-value">0°</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 地圖 -->
-            <div class="col-lg-6">
-                <div class="card dashboard-card h-100 shadow-lg">
-                    <div class="card-header bg-gradient-primary">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-geo-alt me-2"></i>
-                                <h5 class="mb-0 text-white">無人機位置</h5>
-                            </div>
-                            <div class="map-controls">
-                                <button class="btn btn-sm btn-outline-light" id="center-map">
-                                    <i class="bi bi-crosshair"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body p-0">
-                        <div id="map" class="map-container"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 第三排 - 充電圖表 -->
-        <div class="row g-4">
-            <div class="col-12">
-                <div class="card dashboard-card shadow-lg">
-                    <div class="card-header bg-gradient-dark">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-graph-up me-2"></i>
-                                <h5 class="mb-0 text-white">充電歷程監控</h5>
-                            </div>
-                            <div class="charging-controls">
-                                <button id="start-charging-btn" class="btn btn-success btn-sm">
-                                    <i class="bi bi-play-fill me-1"></i>開始充電記錄
-                                </button>
-                                <button id="stop-charging-btn" class="btn btn-danger btn-sm" disabled>
-                                    <i class="bi bi-stop-fill me-1"></i>停止記錄
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="charging-status mb-3">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="charging-stat">
-                                        <small class="text-muted">充電狀態</small>
-                                        <div id="charging-status" class="fw-bold">待機中</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="charging-stat">
-                                        <small class="text-muted">充電時間</small>
-                                        <div id="charging-time" class="fw-bold">00:00</div>
-                                    </div>
-                                </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="charging-chart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- 主要 UI 覆蓋層 -->
+    <main class="hud-interface">
         
-        <!-- 歷史充電紀錄 -->
-        <div class="row mt-4">
-            <div class="col-12">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-gradient-secondary">
-                        <i class="bi bi-clock-history me-2"></i>
-                        <span class="fw-bold text-white">歷史充電紀錄</span>
+        <!-- 左側面板：飛行數據 -->
+        <aside class="hud-panel left-panel">
+            
+            <!-- ATTITUDE MODULE -->
+            <div class="hud-box">
+                <div class="box-header">ATTITUDE // GYRO</div>
+                <div class="attitude-grid">
+                    <div class="att-item">
+                        <span class="att-label">PITCH</span>
+                        <span class="att-val" id="pitch-val">0.0°</span>
                     </div>
-                    <div class="card-body">
-                        <div id="charging-history-list" class="table-responsive">
-                            <table class="table table-sm table-hover align-middle mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>開始時間</th>
-                                        <th>結束時間</th>
-                                        <th>充電時長</th>
-                                        <th>起始電壓</th>
-                                        <th>結束電壓</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="charging-history-body">
-                                    <!-- 動態產生 -->
-                                </tbody>
-                            </table>
+                    <div class="att-item">
+                        <span class="att-label">ROLL</span>
+                        <span class="att-val" id="roll-val">0.0°</span>
+                    </div>
+                    <div class="att-item">
+                        <span class="att-label">YAW</span>
+                        <span class="att-val" id="yaw-val">0.0°</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TELEMETRY MODULE (Vertical Bars) -->
+            <div class="hud-box telemetry-box">
+                <div class="box-header">FLIGHT METRICS</div>
+                <div class="telemetry-row">
+                    <!-- Altitude -->
+                    <div class="vertical-gauge-container">
+                        <div class="gauge-track">
+                            <div class="gauge-fill" id="alt-bar" style="height: 0%"></div>
+                        </div>
+                        <div class="gauge-info">
+                            <span class="gauge-title">ALT</span>
+                            <span class="gauge-num" id="altitude-val">0.0</span>
+                            <span class="gauge-unit">M</span>
+                        </div>
+                    </div>
+                    <!-- Speed -->
+                    <div class="vertical-gauge-container">
+                        <div class="gauge-track">
+                            <div class="gauge-fill" id="spd-bar" style="height: 0%"></div>
+                        </div>
+                        <div class="gauge-info">
+                            <span class="gauge-title">SPD</span>
+                            <span class="gauge-num" id="speed-val">0.0</span>
+                            <span class="gauge-unit">M/S</span>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- POWER MODULE -->
+            <div class="hud-box">
+                <div class="box-header">POWER SYSTEM</div>
+                <div class="battery-display">
+                    <div class="battery-header">
+                        <span>MAIN CELL</span>
+                        <span id="battery-percent">0%</span>
+                    </div>
+                    <div class="battery-segments" id="battery-segments">
+                        <!-- JS generates segments -->
+                        <div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div>
+                        <div class="seg"></div><div class="seg"></div><div class="seg"></div><div class="seg"></div>
+                        <div class="seg"></div><div class="seg"></div>
+                    </div>
+                    <div class="power-details">
+                        <div class="p-item">
+                            <span class="p-label">VOLTAGE</span>
+                            <span class="p-val" id="battery-volt">0.0V</span>
+                        </div>
+                        <div class="p-item">
+                            <span class="p-label">CURRENT</span>
+                            <span class="p-val" id="battery-current">0.0A</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- 中央：HUD Overlay -->
+        <div class="hud-center">
+            <div class="hud-ring"></div>
+            <div class="flight-mode-label">MODE</div>
+            <div class="flight-mode-display" id="flight-mode">STABILIZE</div>
+            <div class="arm-status-display" id="arming-status">DISARMED</div>
         </div>
 
-    </div>
+        <!-- 右側面板：地圖與控制 -->
+        <aside class="hud-panel right-panel">
+            
+            <!-- MODEL CONFIG MODULE -->
+            <div class="hud-box">
+                <div class="box-header">MODEL CONFIG</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0;">
+                    <label for="arm-length-input" style="font-size: 0.8rem; color: #888;">ARM LENGTH</label>
+                    <div style="display: flex; gap: 5px;">
+                        <input type="number" id="arm-length-input" class="hud-input" value="3.0" step="0.1" min="0.5" max="5.0" style="width: 70px; text-align: center;">
+                        <button id="btn-update-model" class="btn-tech" style="padding: 2px 10px; min-width: auto;">SET</button>
+                    </div>
+                </div>
+            </div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+            <!-- GPS MODULE -->
+            <div class="hud-box">
+                <div class="box-header">GLOBAL POSITION</div>
+                <div class="gps-grid">
+                    <div class="gps-row">
+                        <span class="gps-label">SAT_FIX</span>
+                        <span class="gps-val status-ok" id="rtk-status">NO FIX</span>
+                    </div>
+                    <div class="gps-row">
+                        <span class="gps-label">LATITUDE</span>
+                        <span class="gps-val mono" id="lat-val">00.000000</span>
+                    </div>
+                    <div class="gps-row">
+                        <span class="gps-label">LONGITUDE</span>
+                        <span class="gps-val mono" id="lon-val">000.000000</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAP MODULE -->
+            <div class="hud-box map-box-container">
+                <div class="box-header">NAV MAP</div>
+                <div id="map"></div>
+                <div class="map-overlay-grid"></div>
+            </div>
+
+            <!-- CHARGE MODULE -->
+            <div class="hud-box">
+                <div class="box-header">ENERGY MANAGEMENT</div>
+                <div class="charge-interface">
+                    <div class="status-display">
+                        <span class="status-label">STATUS</span>
+                        <span class="status-text" id="charging-status-text">STANDBY</span>
+                    </div>
+                    <div class="timer-display">
+                        <i class="bi bi-stopwatch"></i> <span id="charging-timer">00:00</span>
+                    </div>
+                    <div class="control-buttons">
+                        <button id="btn-start-charge" class="btn-tech start">
+                            <i class="bi bi-lightning-fill"></i> INITIATE
+                        </button>
+                        <button id="btn-stop-charge" class="btn-tech stop" disabled>
+                            <i class="bi bi-power"></i> TERMINATE
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- 底部狀態列 -->
+    <footer class="hud-footer">
+        <div class="history-toggler" onclick="toggleHistory()">
+            <i class="bi bi-chevron-up"></i> ACCESS CHARGING LOGS
+        </div>
+        <div id="history-panel" class="history-panel">
+            
+            <!-- 歷史紀錄控制列 -->
+            <div class="history-controls">
+                <div class="control-group">
+                    <label for="history-sort"><i class="bi bi-sort-down"></i> SORT</label>
+                    <select id="history-sort" class="hud-select">
+                        <option value="newest">DATE (NEWEST)</option>
+                        <option value="oldest">DATE (OLDEST)</option>
+                        <option value="duration-desc">DURATION (DESC)</option>
+                        <option value="duration-asc">DURATION (ASC)</option>
+                    </select>
+                </div>
+                <div class="control-group">
+                    <label for="history-filter-date"><i class="bi bi-funnel"></i> DATE</label>
+                    <input type="date" id="history-filter-date" class="hud-input">
+                    <button id="history-clear-filter" class="btn-hud btn-sm ms-2">RESET</button>
+                </div>
+            </div>
+
+            <table class="hud-table">
+                <thead>
+                    <tr>
+                        <th>TIMESTAMP</th>
+                        <th>DURATION</th>
+                        <th>V_START</th>
+                        <th>V_END</th>
+                    </tr>
+                </thead>
+                <tbody id="history-body">
+                    <!-- JS 填充 -->
+                </tbody>
+            </table>
+        </div>
+    </footer>
+
+    <!-- 3rd Party Libs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

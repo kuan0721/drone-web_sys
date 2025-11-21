@@ -152,7 +152,7 @@ class DroneController:
 if __name__ == "__main__":
     # 請根據實際參數調整
     drone = DroneController(
-        connection_string='/dev/ttyACM1',   # ← 模擬器通常 /dev/ttyACM0 或 udp:127.0.0.1:14550
+        connection_string='udp:127.0.0.1:14550',   # ← 模擬器通常 /dev/ttyACM0 或 udp:127.0.0.1:14550
         takeoff_altitude=15,
         square_size=5       # <--- 設定正方形邊長（公尺）
     )
