@@ -129,7 +129,13 @@ function initThreeJS() {
     controls.maxDistance = 50;
 
     // 8. Build Detailed Drone Model
-    buildDroneModel(3.0);
+    // Delay slightly to allow browser to render loader first
+    setTimeout(() => {
+        buildDroneModel(3.0);
+        // Hide loader after model is built
+        const loader = document.getElementById('loader-overlay');
+        if(loader) loader.classList.add('loaded');
+    }, 100);
 
     // 9. Animation Loop
     animate();
@@ -470,18 +476,10 @@ function animate() {
         // 2. Rotation Interpolation
         droneGroup.quaternion.slerp(targetQuaternion, 0.05);
 
-        // 3. Camera Follow (Chase Mode)
-        // Keep relative offset, but follow drone center
-        const camOffset = new THREE.Vector3(0, 5, 8); // Default offset
-        // Optional: Rotate offset based on drone yaw if desired (skipping for stability)
-        
+        // 3. Camera Target Update (Allow Free Rotation)
+        // We only update where the camera looks (the center of orbit),
+        // allowing the user to freely rotate around the drone.
         controls.target.set(currentRenderPos.x, currentRenderAltitude, currentRenderPos.z);
-        
-        // Smoothly move camera to maintain offset
-        const targetCamPos = currentRenderPos.clone().add(camOffset);
-        targetCamPos.y = currentRenderAltitude + 5; // Ensure height clearance
-        
-        camera.position.lerp(targetCamPos, 0.05);
     }
 
     renderer.render(scene, camera);

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -18,6 +19,15 @@
 </head>
 <body>
 
+    <!-- Loading Screen -->
+    <div id="loader-overlay">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">INITIALIZING SYSTEM...</div>
+            <div class="loader-bar"><div class="loader-progress"></div></div>
+        </div>
+    </div>
+
     <!-- 背景 3D 場景 -->
     <div id="canvas-container"></div>
 
@@ -26,7 +36,7 @@
         <div class="header-bracket left"></div>
         <div class="logo-area">
             <i class="bi bi-cpu-fill"></i>
-            <span>AERO-SENSE <small>v3.0</small></span>
+            <span>AERO-SENSE <small>v3.3</small></span>
         </div>
         <div class="system-status">
             <div class="status-pill" id="connection-pill">
