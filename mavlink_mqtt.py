@@ -18,9 +18,8 @@ ARDUCOPTER_MODES = {
 MQTT_BROKER = 'test.mosquitto.org'
 MQTT_PORT = 1883
 MQTT_TOPIC = 'goodrich/drone/data'
-PUBLISH_INTERVAL = 0.2  # seconds, set to desired publish rate (0.2 -> 5 Hz)
-MAV_CONNECTION_STR ='udp:127.0.0.1:14550'  # 請依照實際調整  '/dev/ttyACM1'
-USB_PORT = '/dev/ttyUSB0'             # 請依照實際調整        '/dev/ttyUSB0' 
+MAV_CONNECTION_STR = '127.0.0.1:14550'   # 請依照實際調整  127.0.0.1:14550
+USB_PORT = '/dev/ttyUSB0'             # 請依照實際調整
 
 # ---------------------------
 # 電壓讀取 thread
@@ -147,9 +146,7 @@ def main():
     except Exception as e:
         print(f"[MQTT] 連線失敗: {e}")
         return
-    # Start background network loop for paho-mqtt to handle reconnects/acks
-    client.loop_start()
-    print(f"[MQTT] 已連線 {MQTT_BROKER}:{MQTT_PORT} (background loop started)")
+    print(f"[MQTT] 已連線 {MQTT_BROKER}:{MQTT_PORT}")
 
     # 抗抖動暫存
     last_mode = None
@@ -187,13 +184,12 @@ def main():
             battery_present = (now - battery_present_last_time) < 10
 
             # ---- 組裝payload ----
-            # 使用合理的預設值，避免前端接收 null 導致錯誤
             payload = {
                 "timestamp": datetime.utcnow().isoformat() + "Z",
                 "flight_mode": None,
                 "arm_status": None,
-                "speed": 0.0,
-                "altitude": 0.0,
+                "speed": None,
+                "altitude": None,
                 "battery": {
                     "volt": voltage_reader.latest_voltage,
                     "current": None,
@@ -201,13 +197,13 @@ def main():
                     "battery_present": battery_present
                 },
                 "gps_position": {
-                    "lat": 0.0,
-                    "lon": 0.0
+                    "lat": None,
+                    "lon": None
                 },
                 "attitude": {
-                    "pitch": 0.0,
-                    "yaw": 0.0,
-                    "roll": 0.0
+                    "pitch": None,
+                    "yaw": None,
+                    "roll": None
                 },
                 "error_status": error_status if error_status else None
             }
@@ -240,10 +236,15 @@ def main():
             # 2. ATTITUDE
             att = messages.get("ATTITUDE")
             if att:
+                # 弧度轉度數，yaw 轉為 0~360 區間
+                pitch_deg = att.pitch * 57.2958
+                roll_deg = att.roll * 57.2958
+                yaw_deg = (att.yaw * 57.2958) % 360
+
                 payload["attitude"] = {
-                    "pitch": round(att.pitch * 57.2958, 2),
-                    "roll":  round(att.roll * 57.2958, 2),
-                    "yaw":   round(att.yaw * 57.2958, 2)
+                    "pitch": round(pitch_deg, 2),
+                    "roll":  round(roll_deg, 2),
+                    "yaw":   round(yaw_deg, 2)
                 }
 
             # 3. GLOBAL_POSITION_INT
@@ -259,6 +260,7 @@ def main():
                 if vh:
                     payload["altitude"] = round(vh.alt, 2)
                     payload["speed"] = round(vh.groundspeed, 2)
+
             # 4. VFR_HUD (速度)
             vh = messages.get("VFR_HUD")
             if vh:
@@ -271,21 +273,7 @@ def main():
                 payload["battery"]["current"] = (bat.current_battery / 100.0) if bat.current_battery != -1 else None
                 payload["battery"]["battery_present"] = True
             else:
-                # 若沒有 SYS_STATUS，可根據電壓回退判斷是否有電池讀值
-                if voltage_reader.latest_voltage is not None:
-                    payload["battery"]["battery_present"] = True
-                else:
-                    payload["battery"]["battery_present"] = False
-
-            # 若沒有來自 SYS_STATUS 的 battery_percent，嘗試用電壓估算百分比
-            if payload["battery"].get("battery_percent") is None and payload["battery"].get("volt"):
-                try:
-                    volt = payload["battery"]["volt"]
-                    min_v, max_v = 14.8, 16.8
-                    percent = max(0, min(100, (volt - min_v) / (max_v - min_v) * 100))
-                    payload["battery"]["battery_percent"] = round(percent, 1)
-                except Exception:
-                    payload["battery"]["battery_percent"] = None
+                payload["battery"]["battery_present"] = False
 
             # --- 發布MQTT ---
             try:
@@ -295,19 +283,13 @@ def main():
                 print(f"[MQTT] 發布失敗: {e}")
                 error_status.append(f"MQTT publish error: {e}")
 
-            # Control publish frequency via PUBLISH_INTERVAL
-            time.sleep(PUBLISH_INTERVAL)
+            time.sleep(1)
 
     except KeyboardInterrupt:
         print("已中斷執行")
     finally:
         voltage_reader.stop()
         mav_reader.stop()
-        # Stop MQTT background loop then disconnect
-        try:
-            client.loop_stop()
-        except Exception:
-            pass
         client.disconnect()
         print("所有 thread 與資源已釋放")
 
