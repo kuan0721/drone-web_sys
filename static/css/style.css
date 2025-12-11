@@ -1,4 +1,3 @@
-
 /* 
    Theme: AERO-SENSE v3.2 (Dark Gray Mode)
    Colors: Sky Blue (#56B3D5), Charcoal Gray (#3E3E3E), Text White
@@ -420,6 +419,71 @@ body, html {
 .btn-tech.stop:hover { background: var(--alert-color); color: #fff; box-shadow: 0 0 10px var(--alert-color); }
 .btn-tech:disabled { opacity: 0.4; cursor: not-allowed; background: #333; border-color: #555; color: #777; box-shadow: none; }
 
+/* --- CHARGING LOG GRID (NEW) --- */
+.charging-log-container {
+    margin-top: 10px;
+    border: 1px solid #555;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 4px;
+    overflow: hidden;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.log-header {
+    background: var(--bg-dark);
+    padding: 5px 10px;
+    font-size: 0.75rem;
+    color: var(--hud-color);
+    font-weight: 700;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #555;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.blinking-dot {
+    width: 8px; height: 8px;
+    background: var(--alert-color);
+    border-radius: 50%;
+    animation: blink 1s infinite;
+}
+@keyframes blink { 50% { opacity: 0.3; } }
+
+.log-grid-wrapper {
+    max-height: 120px;
+    overflow-y: auto;
+}
+/* Scrollbar Styling */
+.log-grid-wrapper::-webkit-scrollbar { width: 5px; }
+.log-grid-wrapper::-webkit-scrollbar-track { background: #222; }
+.log-grid-wrapper::-webkit-scrollbar-thumb { background: #555; border-radius: 2px; }
+
+.charging-log-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+}
+.charging-log-table th {
+    position: sticky; top: 0;
+    background: #333;
+    color: #ccc;
+    font-size: 0.7rem;
+    padding: 4px;
+    border-bottom: 1px solid #555;
+    text-align: center;
+}
+.charging-log-table td {
+    padding: 4px 10px;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    border-bottom: 1px solid #444;
+    text-align: center;
+}
+.charging-log-table tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+.charging-log-table tr:first-child td { color: var(--success-color); font-weight: bold; } /* Highlight newest */
+
+
 /* --- FOOTER --- */
 .hud-footer {
     position: absolute; bottom: 0; left: 0; width: 100%;
@@ -483,6 +547,7 @@ body, html {
 /* Utils */
 .mono { font-family: var(--font-mono); }
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* RWD */
 @media (max-width: 1200px) {

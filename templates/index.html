@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -198,6 +197,27 @@
                             <i class="bi bi-power"></i> TERMINATE
                         </button>
                     </div>
+
+                    <!-- Charging Data Grid Table -->
+                    <div id="live-charge-container" class="charging-log-container" style="display: none;">
+                        <div class="log-header">
+                            <span class="blinking-dot"></span> LIVE DATA LOG
+                        </div>
+                        <div class="log-grid-wrapper">
+                            <table class="charging-log-table">
+                                <thead>
+                                    <tr>
+                                        <th>TIME (MM:SS)</th>
+                                        <th>VOLTAGE (V)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="live-charge-body">
+                                    <!-- Rows injected via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </aside>
@@ -248,8 +268,8 @@
     <!-- 3rd Party Libs -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Main JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

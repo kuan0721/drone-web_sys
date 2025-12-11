@@ -18,7 +18,7 @@ ARDUCOPTER_MODES = {
 MQTT_BROKER = 'test.mosquitto.org'
 MQTT_PORT = 1883
 MQTT_TOPIC = 'goodrich/drone/data'
-MAV_CONNECTION_STR = '127.0.0.1:14550'   # 請依照實際調整  127.0.0.1:14550
+MAV_CONNECTION_STR = '127.0.0.1:14551'   # 請依照實際調整 (需兩個 MAVLink 輸出: 14550 給 square.py, 14551 給此程式)
 USB_PORT = '/dev/ttyUSB0'             # 請依照實際調整
 
 # ---------------------------

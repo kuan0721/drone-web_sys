@@ -26,7 +26,6 @@ let targetPos = new THREE.Vector3(0, 0, 0);
 
 // Smooth Rotation State (Quaternion)
 let targetQuaternion = new THREE.Quaternion();
-let currentQuaternion = new THREE.Quaternion();
 
 // State Caching (Prevent Flickering)
 let lastFlightMode = null;
@@ -59,7 +58,7 @@ function initThreeJS() {
 
     // 2. Camera
     camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 5000);
-    camera.position.set(0, 5.0, 8.0); 
+    camera.position.set(0, 5.0, 8.0);
     camera.lookAt(0, 0, 0);
 
     // 3. Renderer (Enable Shadows)
@@ -86,7 +85,7 @@ function initThreeJS() {
     dirLight.shadow.bias = -0.0005;
     dirLight.shadow.radius = 4;
     scene.add(dirLight);
-    
+
     const backLight = new THREE.DirectionalLight(0x56B3D5, 0.8);
     backLight.position.set(-10, 10, -20);
     scene.add(backLight);
@@ -134,7 +133,7 @@ function initThreeJS() {
         buildDroneModel(3.0);
         // Hide loader after model is built
         const loader = document.getElementById('loader-overlay');
-        if(loader) loader.classList.add('loaded');
+        if (loader) loader.classList.add('loaded');
     }, 100);
 
     // 9. Animation Loop
@@ -156,7 +155,7 @@ function createAdvancedMetalTexture() {
     const ctx = canvas.getContext('2d');
 
     // Diffuse
-    ctx.fillStyle = '#2b2b2b'; 
+    ctx.fillStyle = '#2b2b2b';
     ctx.fillRect(0, 0, size, size);
     for (let i = 0; i < 4000; i++) {
         const x = Math.random() * size;
@@ -173,7 +172,7 @@ function createAdvancedMetalTexture() {
     const roughCanvas = document.createElement('canvas');
     roughCanvas.width = size; roughCanvas.height = size;
     const rctx = roughCanvas.getContext('2d');
-    rctx.fillStyle = '#555555'; 
+    rctx.fillStyle = '#555555';
     rctx.fillRect(0, 0, size, size);
     for (let i = 0; i < 5000; i++) {
         const x = Math.random() * size;
@@ -200,15 +199,15 @@ function createCarbonFiberTexture() {
     ctx.fillRect(0, 0, size, size);
 
     const tileSize = 32;
-    
+
     // Draw weave pattern
     for (let y = 0; y < size; y += tileSize) {
         for (let x = 0; x < size; x += tileSize) {
             // Checkboard pattern logic
             const isVertical = ((x / tileSize) + (y / tileSize)) % 2 === 0;
-            
+
             const grad = ctx.createLinearGradient(x, y, x + tileSize, y + tileSize);
-            
+
             if (isVertical) {
                 // Vertical-ish weave strand
                 grad.addColorStop(0, '#000000');
@@ -222,10 +221,10 @@ function createCarbonFiberTexture() {
                 grad.addColorStop(0.5, '#1a1a1a');
                 grad.addColorStop(1, '#050505');
             }
-            
+
             ctx.fillStyle = grad;
             ctx.fillRect(x, y, tileSize, tileSize);
-            
+
             // Add fine thread details
             ctx.strokeStyle = 'rgba(0,0,0,0.5)';
             ctx.lineWidth = 1;
@@ -249,7 +248,7 @@ function createCarbonFiberTexture() {
 function buildDroneModel(armLength = 3) {
     if (droneGroup) {
         scene.remove(droneGroup);
-        propellers = []; 
+        propellers = [];
     }
 
     droneGroup = new THREE.Group();
@@ -260,34 +259,34 @@ function buildDroneModel(armLength = 3) {
     const carbonTexture = createCarbonFiberTexture();
 
     // --- Materials ---
-    const matBody = new THREE.MeshPhysicalMaterial({ 
+    const matBody = new THREE.MeshPhysicalMaterial({
         map: carbonTexture,
-        color: 0xffffff, 
+        color: 0xffffff,
         metalness: 0.0,
         roughness: 0.4,
-        clearcoat: 1.0,        
+        clearcoat: 1.0,
         clearcoatRoughness: 0.2,
         reflectivity: 0.8,
         side: THREE.DoubleSide
-    }); 
-    
-    const matDark = new THREE.MeshStandardMaterial({ 
-        color: 0x1a1a1a, 
-        roughness: 0.7, 
-        metalness: 0.3 
-    }); 
-    
-    const matMetal = new THREE.MeshStandardMaterial({ 
+    });
+
+    const matDark = new THREE.MeshStandardMaterial({
+        color: 0x1a1a1a,
+        roughness: 0.7,
+        metalness: 0.3
+    });
+
+    const matMetal = new THREE.MeshStandardMaterial({
         map: metalTextures.map,
         roughnessMap: metalTextures.roughnessMap,
         color: 0xaaaaaa,
-        roughness: 0.5, 
-        metalness: 0.8 
+        roughness: 0.5,
+        metalness: 0.8
     });
 
-    const matGold = new THREE.MeshPhysicalMaterial({ 
-        color: 0xd4af37, 
-        roughness: 0.3, 
+    const matGold = new THREE.MeshPhysicalMaterial({
+        color: 0xd4af37,
+        roughness: 0.3,
         metalness: 1.0,
         clearcoat: 0.8
     });
@@ -296,15 +295,15 @@ function buildDroneModel(armLength = 3) {
     const matPropFront = new THREE.MeshStandardMaterial({ color: 0xff6600, roughness: 0.4, metalness: 0.1 });
     const matPropRear = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4, metalness: 0.1 });
 
-    const matGlowCyan = new THREE.MeshBasicMaterial({ color: 0x56B3D5 }); 
-    const matLightRed = new THREE.MeshBasicMaterial({ color: 0xef4444 }); 
-    const matLightGreen = new THREE.MeshBasicMaterial({ color: 0x22c55e }); 
+    const matGlowCyan = new THREE.MeshBasicMaterial({ color: 0x56B3D5 });
+    const matLightRed = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+    const matLightGreen = new THREE.MeshBasicMaterial({ color: 0x22c55e });
 
     function cast(mesh) { mesh.castShadow = true; mesh.receiveShadow = true; return mesh; }
 
     // --- 1. FUSELAGE (Carbon) ---
     const fuselageGroup = new THREE.Group();
-    
+
     // Main Body Block
     const bodyGeo = new THREE.BoxGeometry(0.6, 0.15, 1.0);
     // UV Mapping adjustment for box to show texture properly
@@ -312,7 +311,7 @@ function buildDroneModel(armLength = 3) {
 
     // Top Plate
     const topPlateGeo = new THREE.BoxGeometry(0.45, 0.03, 0.8);
-    const topPlate = cast(new THREE.Mesh(topPlateGeo, matBody)); 
+    const topPlate = cast(new THREE.Mesh(topPlateGeo, matBody));
     topPlate.position.y = 0.09;
     fuselageGroup.add(topPlate);
 
@@ -335,8 +334,8 @@ function buildDroneModel(armLength = 3) {
     tipL.position.y = 0.2;
     antL.add(stemL, tipL);
     antL.position.set(-0.15, 0.2, 0.45);
-    antL.rotation.x = -0.4; 
-    antL.rotation.z = 0.4; 
+    antL.rotation.x = -0.4;
+    antL.rotation.z = 0.4;
     fuselageGroup.add(antL);
 
     const antR = antL.clone();
@@ -348,7 +347,7 @@ function buildDroneModel(armLength = 3) {
 
     // --- 2. ARMS (Carbon) ---
     const armGeo = new THREE.BoxGeometry(0.1, 0.06, armLength);
-    const arm1 = cast(new THREE.Mesh(armGeo, matBody)); 
+    const arm1 = cast(new THREE.Mesh(armGeo, matBody));
     arm1.rotation.y = Math.PI / 4;
     droneGroup.add(arm1);
 
@@ -365,14 +364,14 @@ function buildDroneModel(armLength = 3) {
     droneGroup.add(brace2);
 
     // --- 3. MOTORS & PROPS ---
-    const dist = 0.45 * armLength; 
+    const dist = 0.45 * armLength;
     const angle = Math.PI / 4;
-    
+
     const motorPositions = [
-        { x: -Math.sin(angle)*dist, z: -Math.cos(angle)*dist, dir: 1, color: matLightRed, propMat: matPropFront },
-        { x: Math.sin(angle)*dist, z: -Math.cos(angle)*dist, dir: -1, color: matLightGreen, propMat: matPropFront },
-        { x: -Math.sin(angle)*dist, z: Math.cos(angle)*dist, dir: -1, color: matLightRed, propMat: matPropRear },
-        { x: Math.sin(angle)*dist, z: Math.cos(angle)*dist, dir: 1, color: matLightGreen, propMat: matPropRear }
+        { x: -Math.sin(angle) * dist, z: -Math.cos(angle) * dist, dir: 1, color: matLightRed, propMat: matPropFront },
+        { x: Math.sin(angle) * dist, z: -Math.cos(angle) * dist, dir: -1, color: matLightGreen, propMat: matPropFront },
+        { x: -Math.sin(angle) * dist, z: Math.cos(angle) * dist, dir: -1, color: matLightRed, propMat: matPropRear },
+        { x: Math.sin(angle) * dist, z: Math.cos(angle) * dist, dir: 1, color: matLightGreen, propMat: matPropRear }
     ];
 
     motorPositions.forEach(pos => {
@@ -382,19 +381,19 @@ function buildDroneModel(armLength = 3) {
         const mBase = cast(new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.15, 32), matMetal));
         mBase.position.y = 0.05;
         mGroup.add(mBase);
-        
+
         const mCoil = cast(new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.05, 32), matGold));
         mCoil.position.y = 0.12;
         mGroup.add(mCoil);
 
         const light = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.02, 0.06), pos.color);
-        light.position.y = -0.02; 
+        light.position.y = -0.02;
         mGroup.add(light);
 
         const prop = cast(new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.015, 0.15), pos.propMat));
         prop.position.y = 0.21;
         mGroup.add(prop);
-        
+
         const spin = cast(new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.1, 32), matMetal));
         spin.position.y = 0.23;
         mGroup.add(spin);
@@ -419,7 +418,7 @@ function buildDroneModel(armLength = 3) {
         v1.position.set(xPos, -0.25, 0.35);
         v1.rotation.x = -0.2;
         legGroup.add(v1);
-        
+
         const v2 = cast(new THREE.Mesh(strutGeo, matMetal));
         v2.position.set(xPos, -0.25, -0.35);
         v2.rotation.x = 0.2;
@@ -428,7 +427,7 @@ function buildDroneModel(armLength = 3) {
         const diag = cast(new THREE.Mesh(strutGeo, matMetal));
         diag.scale.y = 1.3;
         diag.position.set(xPos * 0.5, -0.25, 0);
-        diag.rotation.z = (xPos > 0) ? 0.6 : -0.6; 
+        diag.rotation.z = (xPos > 0) ? 0.6 : -0.6;
         legGroup.add(diag);
         return legGroup;
     }
@@ -454,7 +453,7 @@ function buildDroneModel(armLength = 3) {
 function animate() {
     requestAnimationFrame(animate);
 
-    if(controls) controls.update();
+    if (controls) controls.update();
 
     // Propeller Animation
     propellers.forEach((prop) => {
@@ -466,7 +465,7 @@ function animate() {
         // 1. Position Interpolation (X, Y, Z)
         // Lerp Altitude
         currentRenderAltitude = THREE.MathUtils.lerp(currentRenderAltitude, targetAltitude, 0.03);
-        
+
         // Lerp Horizontal Position
         currentRenderPos.lerp(targetPos, 0.03);
 
@@ -490,10 +489,10 @@ function animate() {
    ========================================= */
 
 async function startDataPolling() {
-    setInterval(fetchOrientation, 50); 
-    setInterval(fetchTelemetry, 500);   
-    setInterval(fetchStatus, 1000);     
-    fetchChargingHistory();             
+    setInterval(fetchOrientation, 50);
+    setInterval(fetchTelemetry, 500);
+    setInterval(fetchStatus, 1000);
+    fetchChargingHistory();
 }
 
 // 1. Orientation
@@ -501,7 +500,7 @@ async function fetchOrientation() {
     try {
         const res = await fetch('/get_drone_orientation');
         const data = await res.json();
-        
+
         const pitch = data.pitch * (Math.PI / 180);
         const yaw = -data.yaw * (Math.PI / 180);
         const roll = -data.roll * (Math.PI / 180);
@@ -533,7 +532,7 @@ async function fetchTelemetry() {
         const altData = await altRes.json();
         const alt = altData.altitude || 0;
         targetAltitude = Math.max(0, alt); // Update Target Y
-        
+
         document.getElementById('altitude-val').innerText = alt.toFixed(1);
         document.getElementById('alt-bar').style.height = Math.min((alt / 100) * 100, 100) + '%';
 
@@ -564,7 +563,6 @@ function updateBatteryUI(data) {
 // 3. Status, GPS & PATH TRACKING
 async function fetchStatus() {
     try {
-        // ... (Mode and Arm status logic unchanged) ...
         const modeRes = await fetch('/get_flight_mode');
         if (modeRes.ok) {
             const modeData = await modeRes.json();
@@ -596,7 +594,7 @@ async function fetchStatus() {
             if (newRtk !== lastRtkStatus) {
                 const rtkEl = document.getElementById('rtk-status');
                 rtkEl.innerText = newRtk;
-                if(newRtk.includes('FIX')) rtkEl.classList.add('status-ok');
+                if (newRtk.includes('FIX')) rtkEl.classList.add('status-ok');
                 else rtkEl.classList.remove('status-ok');
                 lastRtkStatus = newRtk;
             }
@@ -607,7 +605,7 @@ async function fetchStatus() {
         const posData = await posRes.json();
         const lat = posData.lat || 0;
         const lon = posData.lon || 0;
-        
+
         document.getElementById('lat-val').innerText = lat.toFixed(6);
         document.getElementById('lon-val').innerText = lon.toFixed(6);
 
@@ -619,21 +617,21 @@ async function fetchStatus() {
             }
 
             // 2. Update 2D Map
-            if(map) {
-                if(droneMarker) droneMarker.setLatLng([lat, lon]);
-                if(!mapPolyline) {
+            if (map) {
+                if (droneMarker) droneMarker.setLatLng([lat, lon]);
+                if (!mapPolyline) {
                     // Initialize Polyline
-                    mapPolyline = L.polyline([], {color: '#56B3D5', weight: 3}).addTo(map);
+                    mapPolyline = L.polyline([], { color: '#56B3D5', weight: 3 }).addTo(map);
                 }
                 // Add point if it moved slightly
                 const latLngs = mapPolyline.getLatLngs();
-                const lastPt = latLngs.length > 0 ? latLngs[latLngs.length-1] : null;
-                
+                const lastPt = latLngs.length > 0 ? latLngs[latLngs.length - 1] : null;
+
                 // Simple distance check to avoid clutter
                 if (!lastPt || (Math.abs(lastPt.lat - lat) > 0.00001 || Math.abs(lastPt.lng - lon) > 0.00001)) {
                     mapPolyline.addLatLng([lat, lon]);
                     if (document.getElementById('arming-status').classList.contains('armed')) {
-                         map.panTo([lat, lon]); // Auto pan only if armed
+                        map.panTo([lat, lon]); // Auto pan only if armed
                     }
                 }
             }
@@ -643,7 +641,7 @@ async function fetchStatus() {
             const R = 6378137; // Earth Radius meters
             const dLat = (lat - initialPos.lat) * Math.PI / 180;
             const dLon = (lon - initialPos.lon) * Math.PI / 180;
-            
+
             // Local 3D coords: X = East(Lon), Z = South(-Lat) for convention
             // Latitude delta in meters = dLat * R
             // Longitude delta in meters = dLon * R * cos(lat)
@@ -656,7 +654,7 @@ async function fetchStatus() {
             // 4. Update 3D Trail Line
             // Only add point if moved enough to save performance
             const currentPoint = new THREE.Vector3(x, targetAltitude, z);
-            if (flightPathPoints.length === 0 || flightPathPoints[flightPathPoints.length-1].distanceTo(currentPoint) > 0.5) {
+            if (flightPathPoints.length === 0 || flightPathPoints[flightPathPoints.length - 1].distanceTo(currentPoint) > 0.5) {
                 flightPathPoints.push(currentPoint);
                 if (flightPathPoints.length > MAX_TRAIL_POINTS) flightPathPoints.shift(); // Remove old
 
@@ -680,11 +678,11 @@ async function fetchStatus() {
    MAP & CHARTS
    ========================================= */
 function initMap() {
-    map = L.map('map', { 
+    map = L.map('map', {
         zoomControl: false,
-        attributionControl: false 
+        attributionControl: false
     }).setView([25.0330, 121.5654], 16);
-    
+
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 20
     }).addTo(map);
@@ -696,22 +694,22 @@ function initMap() {
         iconAnchor: [10, 10]
     });
 
-    droneMarker = L.marker([25.0330, 121.5654], {icon: droneIcon}).addTo(map);
+    droneMarker = L.marker([25.0330, 121.5654], { icon: droneIcon }).addTo(map);
 }
 
 /* =========================================
-   UI INTERACTIONS & CHARGING
+   UI INTERACTIONS & CHARGING (GRID TABLE LOGIC)
    ========================================= */
 
 function updateTime() {
     const now = new Date();
-    document.getElementById('current-time').innerText = now.toLocaleTimeString('en-US', {hour12: false});
+    document.getElementById('current-time').innerText = now.toLocaleTimeString('en-US', { hour12: false });
 }
 
 function setupEventListeners() {
     document.getElementById('btn-start-charge').addEventListener('click', startCharge);
     document.getElementById('btn-stop-charge').addEventListener('click', stopCharge);
-    
+
     document.getElementById('history-sort').addEventListener('change', renderHistory);
     document.getElementById('history-filter-date').addEventListener('input', renderHistory);
     document.getElementById('history-clear-filter').addEventListener('click', () => {
@@ -721,64 +719,120 @@ function setupEventListeners() {
 
     document.getElementById('btn-update-model').addEventListener('click', () => {
         const length = parseFloat(document.getElementById('arm-length-input').value);
-        if(length && length > 0) buildDroneModel(length);
+        if (length && length > 0) buildDroneModel(length);
     });
 }
 
+let currentSessionData = [];
+
+// Starts the charging process and enables the data grid recording
 async function startCharge() {
-    if(chargingInterval) return;
-    
+    if (chargingInterval) return;
+
     chargingStartTime = new Date();
+    currentSessionData = []; // Reset data
+
+    // UI Updates
     document.getElementById('btn-start-charge').disabled = true;
     document.getElementById('btn-stop-charge').disabled = false;
-    
-    const statusEl = document.getElementById('charging-status-text');
-    statusEl.innerText = "ACTIVE";
-    statusEl.style.color = "#22c55e"; 
 
+    const container = document.getElementById('live-charge-container');
+    const tbody = document.getElementById('live-charge-body');
+
+    // Show grid and clear old rows
+    if (container) container.style.display = 'block';
+    if (tbody) tbody.innerHTML = '';
+
+    const statusEl = document.getElementById('charging-status-text');
+    statusEl.innerText = "CHARGING";
+    statusEl.style.color = "#22c55e";
+
+    // Record initial point (00:00)
+    recordCurrentChargePoint(0);
+
+    // Start Loop
     chargingInterval = setInterval(() => {
         const now = new Date();
-        const diff = Math.floor((now - chargingStartTime) / 1000);
-        const m = Math.floor(diff / 60).toString().padStart(2, '0');
-        const s = (diff % 60).toString().padStart(2, '0');
+        const diffSeconds = Math.floor((now - chargingStartTime) / 1000);
+
+        // Update Timer Display
+        const m = Math.floor(diffSeconds / 60).toString().padStart(2, '0');
+        const s = (diffSeconds % 60).toString().padStart(2, '0');
         document.getElementById('charging-timer').innerText = `${m}:${s}`;
+
+        // Add row to grid
+        recordCurrentChargePoint(diffSeconds);
+
     }, 1000);
-    
-    await fetch('/start_charging_monitor', { method: 'POST' });
+
+    // Notify Backend
+    try {
+        await fetch('/start_charging_monitor', { method: 'POST' });
+    } catch (e) { console.warn("Backend start monitor failed", e); }
+}
+
+function recordCurrentChargePoint(totalSeconds) {
+    // Get current voltage from the UI element (which is updated by fetchTelemetry)
+    const vText = document.getElementById('battery-volt').innerText;
+    const vNow = parseFloat(vText) || 0;
+
+    // 1. Add to Data Array
+    currentSessionData.push({
+        time_minutes: parseFloat((totalSeconds / 60).toFixed(2)),
+        voltage: vNow
+    });
+
+    // 2. Update Grid Table (Single Row Only)
+    const tbody = document.getElementById('live-charge-body');
+    if (tbody) {
+        const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+        const s = (totalSeconds % 60).toString().padStart(2, '0');
+
+        // Directly overwrite innerHTML to keep only one row
+        tbody.innerHTML = `
+            <tr>
+                <td class="mono">${m}:${s}</td>
+                <td class="mono" style="color: #56B3D5;">${vNow.toFixed(2)}V</td>
+            </tr>
+        `;
+    }
 }
 
 async function stopCharge() {
-    if(!chargingInterval) return;
-    
+    if (!chargingInterval) return;
+
     clearInterval(chargingInterval);
     chargingInterval = null;
-    
+
     document.getElementById('btn-start-charge').disabled = false;
     document.getElementById('btn-stop-charge').disabled = true;
-    
+
     const statusEl = document.getElementById('charging-status-text');
     statusEl.innerText = "COMPLETE";
-    statusEl.style.color = "#56B3D5"; 
-    
+    statusEl.style.color = "#56B3D5";
+
     const now = new Date();
-    const vStart = parseFloat(document.getElementById('battery-volt').innerText) || 0;
-    const vEnd = vStart; 
+    const vStart = currentSessionData.length > 0 ? currentSessionData[0].voltage : 0;
+    // Get final voltage from last recorded point or UI
+    const vEnd = currentSessionData.length > 0 ? currentSessionData[currentSessionData.length - 1].voltage : 0;
 
     const record = {
         start_time: chargingStartTime.toISOString(),
         end_time: now.toISOString(),
-        duration_minutes: (now - chargingStartTime)/60000,
+        duration_minutes: (now - chargingStartTime) / 60000,
         start_voltage: vStart,
-        end_voltage: vEnd
+        end_voltage: vEnd,
+        charging_curve: currentSessionData // Save detailed data
     };
 
-    await fetch('/save_charging_record', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(record)
-    });
-
-    fetchChargingHistory();
+    try {
+        await fetch('/save_charging_record', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(record)
+        });
+        fetchChargingHistory();
+    } catch (e) { console.error("Save failed", e); }
 }
 
 function toggleHistory() {
@@ -803,7 +857,7 @@ function renderHistory() {
 
     if (filterDate) {
         displayData = displayData.filter(item => {
-            if(!item.start_time) return false;
+            if (!item.start_time) return false;
             const itemDate = new Date(item.start_time).toLocaleDateString('en-CA');
             return itemDate === filterDate;
         });
